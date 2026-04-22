@@ -58,6 +58,7 @@ export async function updateDish(id: number, data: { name?: string; verified?: b
 }
 
 export async function deleteDish(id: number) {
+  await db.deleteFrom("dish_ingredients").where("dish_id", "=", id).execute()
   await db.deleteFrom("dishes").where("id", "=", id).execute()
   revalidatePath("/platos")
 }

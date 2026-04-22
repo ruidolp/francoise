@@ -70,7 +70,7 @@ export function ProductAutocomplete({ onSelect, placeholder = "Agregar ingredien
         style={{ borderColor: "var(--border)", background: "var(--muted)" }}
       />
       {open && (
-        <div className="absolute left-0 right-0 top-full mt-1 rounded-xl shadow-lg z-50 overflow-hidden"
+        <div className="absolute left-0 right-0 bottom-full mb-1 rounded-xl shadow-lg z-50 overflow-hidden"
           style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
           {results.map(p => (
             <button key={p.id} onMouseDown={e => { e.preventDefault(); select(p) }}
