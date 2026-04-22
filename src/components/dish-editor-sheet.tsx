@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { X, CheckCircle, Loader2, Trash2, ChevronLeft, UtensilsCrossed } from "lucide-react"
 import { ProductAutocomplete } from "@/components/product-autocomplete"
-import { getDishWithIngredients, saveDishIngredients, updateDish } from "@/lib/actions/dishes"
+import { getDishWithIngredients, saveDishIngredients, updateDish, deleteDish } from "@/lib/actions/dishes"
 import { getUnits } from "@/lib/actions/units"
 import type { Dish, Unit, Product } from "@/lib/db/types"
 
@@ -36,6 +36,7 @@ export function DishEditorSheet({ dish, open, onClose, onSaved, onDeleted, showQ
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const dishIdRef = useRef<number | null>(null)
+  const listRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!open || !dish) {
@@ -65,7 +66,11 @@ export function DishEditorSheet({ dish, open, onClose, onSaved, onDeleted, showQ
   function addIngredient(product: Product) {
     setIngredients(prev => {
       if (prev.some(i => i.product_id === product.id)) return prev
-      return [...prev, { product_id: product.id, product_name: product.name, quantity: null, unit_id: null }]
+      const next = [...prev, { product_id: product.id, product_name: product.name, quantity: null, unit_id: null }]
+      setTimeout(() => {
+        if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight
+      }, 0)
+      return next
     })
   }
 
@@ -102,7 +107,9 @@ export function DishEditorSheet({ dish, open, onClose, onSaved, onDeleted, showQ
     if (!dish || deleting) return
     setDeleting(true)
     try {
+      await deleteDish(dish.id)
       onDeleted(dish.id)
+      onClose()
     } finally {
       setDeleting(false)
     }
@@ -128,33 +135,9 @@ export function DishEditorSheet({ dish, open, onClose, onSaved, onDeleted, showQ
               Verificado
             </span>
           )}
-          <button
-            onClick={() => setConfirmDelete(v => !v)}
-            className="p-2 rounded-xl transition-colors"
-            style={{ color: confirmDelete ? "var(--destructive)" : "var(--muted-foreground)" }}>
-            <Trash2 size={18} />
-          </button>
+          <div style={{ width: 34 }} />
         </div>
 
-        {/* Confirmación eliminar */}
-        {confirmDelete && (
-          <div className="mx-4 mt-3 p-3 rounded-xl flex items-center justify-between flex-shrink-0"
-            style={{ background: "var(--destructive)", color: "white" }}>
-            <span className="text-sm font-medium">¿Eliminar este plato?</span>
-            <div className="flex gap-2">
-              <button onClick={() => setConfirmDelete(false)}
-                className="text-xs px-3 py-1 rounded-lg font-medium"
-                style={{ background: "rgba(255,255,255,0.2)" }}>
-                No
-              </button>
-              <button onClick={handleDelete} disabled={deleting}
-                className="text-xs px-3 py-1 rounded-lg font-medium flex items-center gap-1"
-                style={{ background: "white", color: "var(--destructive)" }}>
-                {deleting ? <Loader2 size={12} className="animate-spin" /> : "Sí, eliminar"}
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Nombre del plato */}
         <div className="px-4 pt-4 pb-3 flex-shrink-0">
@@ -191,7 +174,7 @@ export function DishEditorSheet({ dish, open, onClose, onSaved, onDeleted, showQ
           </div>
 
           {/* Lista scrolleable */}
-          <div className="overflow-y-auto flex-1 mb-3 space-y-2 pr-0.5">
+          <div ref={listRef} className="overflow-y-auto flex-1 mb-3 space-y-2 pr-0.5">
             {ingredients.length === 0 && !loading && (
               <div className="flex flex-col items-center justify-center py-8 text-center">
                 <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
@@ -256,8 +239,8 @@ export function DishEditorSheet({ dish, open, onClose, onSaved, onDeleted, showQ
           </div>
         </div>
 
-        {/* Footer guardar */}
-        <div className="px-4 pt-3 pb-6 flex-shrink-0"
+        {/* Footer guardar / eliminar */}
+        <div className="px-4 pt-3 pb-6 flex-shrink-0 flex flex-col gap-2"
           style={{ borderTop: "1px solid var(--border)", background: "var(--background)" }}>
           <Button onClick={handleSave} disabled={saving || !name.trim()} className="w-full h-12 text-base font-semibold rounded-xl"
             style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}>
@@ -266,6 +249,35 @@ export function DishEditorSheet({ dish, open, onClose, onSaved, onDeleted, showQ
               : <><CheckCircle size={18} className="mr-2" /> Guardar plato</>
             }
           </Button>
+
+          {dish && !confirmDelete && (
+            <button
+              onClick={() => setConfirmDelete(true)}
+              className="w-full h-10 text-sm font-medium rounded-xl flex items-center justify-center gap-2 transition-colors"
+              style={{ color: "var(--destructive)", border: "1px solid var(--destructive)" }}>
+              <Trash2 size={15} />
+              Eliminar plato
+            </button>
+          )}
+
+          {confirmDelete && (
+            <div className="p-3 rounded-xl flex items-center justify-between"
+              style={{ background: "var(--destructive)", color: "white" }}>
+              <span className="text-sm font-medium">¿Eliminar este plato?</span>
+              <div className="flex gap-2">
+                <button onClick={() => setConfirmDelete(false)}
+                  className="text-xs px-3 py-1 rounded-lg font-medium"
+                  style={{ background: "rgba(255,255,255,0.2)" }}>
+                  No
+                </button>
+                <button onClick={handleDelete} disabled={deleting}
+                  className="text-xs px-3 py-1 rounded-lg font-medium flex items-center gap-1"
+                  style={{ background: "white", color: "var(--destructive)" }}>
+                  {deleting ? <Loader2 size={12} className="animate-spin" /> : "Sí, eliminar"}
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </SheetContent>
     </Sheet>
