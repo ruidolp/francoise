@@ -5,4 +5,4 @@ export const THEMES = [
 ] as const
 
 export type ThemeId = typeof THEMES[number]["id"]
-export const DEFAULT_THEME: ThemeId = "natural"
+export const DEFAULT_THEME: ThemeId = "calido"
