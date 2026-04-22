@@ -1,12 +1,11 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
+import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
-import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { X, CheckCircle, Loader2, ChevronDown, Trash2 } from "lucide-react"
+import { X, CheckCircle, Loader2, Trash2, ChevronLeft, UtensilsCrossed } from "lucide-react"
 import { ProductAutocomplete } from "@/components/product-autocomplete"
 import { getDishWithIngredients, saveDishIngredients, updateDish } from "@/lib/actions/dishes"
 import { getUnits } from "@/lib/actions/units"
@@ -34,13 +33,14 @@ export function DishEditorSheet({ dish, open, onClose, onSaved, onDeleted, showQ
   const [units, setUnits] = useState<Unit[]>([])
   const [loading, setLoading] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [showDeleteOption, setShowDeleteOption] = useState(false)
+  const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const dishIdRef = useRef<number | null>(null)
 
   useEffect(() => {
     if (!open || !dish) {
       setIngredients([])
+      setConfirmDelete(false)
       return
     }
     setName(dish.name)
@@ -48,7 +48,7 @@ export function DishEditorSheet({ dish, open, onClose, onSaved, onDeleted, showQ
     setLoading(true)
 
     Promise.all([getDishWithIngredients(dish.id), getUnits()]).then(([data, unitList]) => {
-      if (dishIdRef.current !== dish.id) return // plato cambió mientras cargaba
+      if (dishIdRef.current !== dish.id) return
       setUnits(unitList)
       if (data) {
         setIngredients(data.ingredients.map(i => ({
@@ -60,7 +60,7 @@ export function DishEditorSheet({ dish, open, onClose, onSaved, onDeleted, showQ
       }
       setLoading(false)
     })
-  }, [open, dish?.id]) // solo re-ejecuta si cambia el ID del plato
+  }, [open, dish?.id])
 
   function addIngredient(product: Product) {
     setIngredients(prev => {
@@ -110,45 +110,119 @@ export function DishEditorSheet({ dish, open, onClose, onSaved, onDeleted, showQ
 
   return (
     <Sheet open={open} onOpenChange={v => !v && onClose()}>
-      <SheetContent side="bottom" className="h-[85vh] rounded-t-2xl px-4 pt-4 flex flex-col"
-        style={{ background: "var(--card)", color: "var(--card-foreground)" }}>
-        <SheetHeader className="mb-3">
-          <SheetTitle className="flex items-center gap-2" style={{ color: "var(--foreground)" }}>
-            {dish?.verified && <CheckCircle size={16} style={{ color: "var(--verified)" }} />}
-            Editar plato
-          </SheetTitle>
-        </SheetHeader>
+      <SheetContent side="bottom" className="h-[90vh] rounded-t-2xl p-0 flex flex-col"
+        style={{ background: "var(--background)", color: "var(--foreground)" }}>
 
-        {/* Nombre */}
-        <div className="mb-4">
-          <Label className="text-xs mb-1 block" style={{ color: "var(--muted-foreground)" }}>Nombre</Label>
-          <Input value={name} onChange={e => setName(e.target.value)}
-            style={{ borderColor: "var(--border)", background: "var(--muted)" }} />
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 pt-4 pb-3 flex-shrink-0"
+          style={{ borderBottom: "1px solid var(--border)" }}>
+          <button onClick={onClose} className="flex items-center gap-1 text-sm font-medium"
+            style={{ color: "var(--muted-foreground)" }}>
+            <ChevronLeft size={18} />
+            Volver
+          </button>
+          {dish?.verified && (
+            <span className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full"
+              style={{ background: "var(--secondary)", color: "var(--verified)" }}>
+              <CheckCircle size={12} />
+              Verificado
+            </span>
+          )}
+          <button
+            onClick={() => setConfirmDelete(v => !v)}
+            className="p-2 rounded-xl transition-colors"
+            style={{ color: confirmDelete ? "var(--destructive)" : "var(--muted-foreground)" }}>
+            <Trash2 size={18} />
+          </button>
         </div>
 
-        {/* Ingredientes: lista scrolleable separada del autocomplete */}
-        <div className="flex-1 flex flex-col min-h-0">
-          <Label className="text-xs mb-2 block" style={{ color: "var(--muted-foreground)" }}>
-            Ingredientes {loading && <Loader2 size={10} className="inline animate-spin ml-1" />}
-          </Label>
+        {/* Confirmación eliminar */}
+        {confirmDelete && (
+          <div className="mx-4 mt-3 p-3 rounded-xl flex items-center justify-between flex-shrink-0"
+            style={{ background: "var(--destructive)", color: "white" }}>
+            <span className="text-sm font-medium">¿Eliminar este plato?</span>
+            <div className="flex gap-2">
+              <button onClick={() => setConfirmDelete(false)}
+                className="text-xs px-3 py-1 rounded-lg font-medium"
+                style={{ background: "rgba(255,255,255,0.2)" }}>
+                No
+              </button>
+              <button onClick={handleDelete} disabled={deleting}
+                className="text-xs px-3 py-1 rounded-lg font-medium flex items-center gap-1"
+                style={{ background: "white", color: "var(--destructive)" }}>
+                {deleting ? <Loader2 size={12} className="animate-spin" /> : "Sí, eliminar"}
+              </button>
+            </div>
+          </div>
+        )}
 
-          {/* Lista con scroll propio — no corta el dropdown */}
-          <div className="overflow-y-auto mb-3 space-y-2" style={{ maxHeight: "calc(85vh - 300px)" }}>
+        {/* Nombre del plato */}
+        <div className="px-4 pt-4 pb-3 flex-shrink-0">
+          <p className="text-xs font-medium mb-1.5" style={{ color: "var(--muted-foreground)" }}>
+            Nombre del plato
+          </p>
+          <input
+            value={name}
+            onChange={e => setName(e.target.value)}
+            className="w-full text-xl font-bold bg-transparent outline-none border-b-2 pb-1 transition-colors"
+            style={{
+              color: "var(--foreground)",
+              borderColor: "var(--primary)",
+            }}
+          />
+        </div>
+
+        {/* Sección ingredientes */}
+        <div className="flex-1 flex flex-col min-h-0 px-4">
+          <div className="flex items-center justify-between mb-3 flex-shrink-0">
+            <div className="flex items-center gap-2">
+              <UtensilsCrossed size={15} style={{ color: "var(--muted-foreground)" }} />
+              <span className="text-sm font-semibold" style={{ color: "var(--foreground)" }}>
+                Ingredientes
+              </span>
+              {ingredients.length > 0 && (
+                <span className="text-xs px-2 py-0.5 rounded-full font-medium"
+                  style={{ background: "var(--secondary)", color: "var(--primary)" }}>
+                  {ingredients.length}
+                </span>
+              )}
+              {loading && <Loader2 size={13} className="animate-spin" style={{ color: "var(--muted-foreground)" }} />}
+            </div>
+          </div>
+
+          {/* Lista scrolleable */}
+          <div className="overflow-y-auto flex-1 mb-3 space-y-2 pr-0.5">
             {ingredients.length === 0 && !loading && (
-              <p className="text-xs py-2" style={{ color: "var(--muted-foreground)" }}>
-                Agrega ingredientes abajo.
-              </p>
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <p className="text-sm" style={{ color: "var(--muted-foreground)" }}>
+                  Aún no hay ingredientes
+                </p>
+                <p className="text-xs mt-1" style={{ color: "var(--muted-foreground)" }}>
+                  Usa el buscador de abajo para añadirlos
+                </p>
+              </div>
             )}
-            {ingredients.map(ing => (
-              <div key={ing.product_id} className="flex items-center gap-2 rounded-xl p-2"
-                style={{ background: "var(--muted)", border: "1px solid var(--border)" }}>
-                <span className="flex-1 text-sm truncate capitalize">{ing.product_name}</span>
+            {ingredients.map((ing, idx) => (
+              <div key={ing.product_id}
+                className="flex items-center gap-2 rounded-xl px-3 py-2.5"
+                style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+                <span className="text-xs font-medium w-5 text-center flex-shrink-0"
+                  style={{ color: "var(--muted-foreground)" }}>
+                  {idx + 1}
+                </span>
+                <span className="flex-1 text-sm font-medium capitalize truncate" style={{ color: "var(--foreground)" }}>
+                  {ing.product_name}
+                </span>
                 {showQuantities && (
                   <>
-                    <Input type="number" placeholder="Cant." value={ing.quantity ?? ""}
+                    <input
+                      type="number"
+                      placeholder="Cant."
+                      value={ing.quantity ?? ""}
                       onChange={e => setQty(ing.product_id, e.target.value)}
-                      className="w-16 text-center text-sm h-8"
-                      style={{ borderColor: "var(--border)" }} />
+                      className="w-14 text-center text-sm rounded-lg px-1 py-1 outline-none"
+                      style={{ background: "var(--muted)", border: "1px solid var(--border)", color: "var(--foreground)" }}
+                    />
                     <Select
                       value={ing.unit_id != null ? ing.unit_id.toString() : undefined}
                       onValueChange={v => setUnit(ing.product_id, v ?? "")}>
@@ -165,42 +239,33 @@ export function DishEditorSheet({ dish, open, onClose, onSaved, onDeleted, showQ
                   </>
                 )}
                 <button onClick={() => removeIngredient(ing.product_id)}
+                  className="flex-shrink-0 p-1 rounded-lg transition-colors"
                   style={{ color: "var(--muted-foreground)" }}>
-                  <X size={16} />
+                  <X size={15} />
                 </button>
               </div>
             ))}
           </div>
 
-          {/* Autocomplete FUERA del scroll — el dropdown no queda cortado */}
-          <ProductAutocomplete onSelect={addIngredient} />
+          {/* Buscador de ingredientes */}
+          <div className="flex-shrink-0 pb-1">
+            <p className="text-xs font-medium mb-1.5" style={{ color: "var(--muted-foreground)" }}>
+              Añadir ingrediente
+            </p>
+            <ProductAutocomplete onSelect={addIngredient} />
+          </div>
         </div>
 
-        <div className="pt-3 pb-2 space-y-2">
-          <Button onClick={handleSave} disabled={saving} className="w-full"
+        {/* Footer guardar */}
+        <div className="px-4 pt-3 pb-6 flex-shrink-0"
+          style={{ borderTop: "1px solid var(--border)", background: "var(--background)" }}>
+          <Button onClick={handleSave} disabled={saving || !name.trim()} className="w-full h-12 text-base font-semibold rounded-xl"
             style={{ background: "var(--primary)", color: "var(--primary-foreground)" }}>
             {saving
-              ? <Loader2 size={16} className="animate-spin" />
-              : <><CheckCircle size={16} className="mr-2" /> Guardar y verificar</>
+              ? <Loader2 size={18} className="animate-spin" />
+              : <><CheckCircle size={18} className="mr-2" /> Guardar plato</>
             }
           </Button>
-
-          <button onClick={() => setShowDeleteOption(!showDeleteOption)}
-            className="w-full py-2 text-xs rounded-lg transition-colors flex items-center justify-center gap-1"
-            style={{ color: "var(--muted-foreground)", background: "transparent" }}>
-            <ChevronDown size={14} style={{ transform: showDeleteOption ? "rotate(180deg)" : "rotate(0)" }} />
-            Más opciones
-          </button>
-
-          {showDeleteOption && (
-            <Button onClick={handleDelete} disabled={deleting} variant="destructive" className="w-full"
-              style={{ background: "var(--destructive)", color: "white" }}>
-              {deleting
-                ? <Loader2 size={16} className="animate-spin" />
-                : <><Trash2 size={16} className="mr-2" /> Eliminar plato</>
-              }
-            </Button>
-          )}
         </div>
       </SheetContent>
     </Sheet>

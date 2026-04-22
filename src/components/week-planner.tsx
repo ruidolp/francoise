@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, Home } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { MealSlotButton } from "@/components/meal-slot-button"
 import { DishPickerSheet } from "@/components/dish-picker-sheet"
-import { getOrCreateWeek, getWeekWithSlots, setMealSlot, clearMealSlot } from "@/lib/actions/weeks"
+import { getOrCreateWeek, getWeekWithSlots, addDishToSlot, removeDishFromSlot } from "@/lib/actions/weeks"
 import {
   getMondayOf, getWeekDays, nextWeek, prevWeek,
   isCurrentWeek, formatWeekRange, formatShortDay,
@@ -13,7 +13,13 @@ import {
 } from "@/lib/utils/week"
 import type { Dish } from "@/lib/db/types"
 
-type SlotMap = Record<string, { dish_id: number | null; dish_name: string | null; dish_verified: boolean | null }>
+interface SlotDish {
+  dish_id: number
+  dish_name: string
+  dish_verified: boolean | null
+}
+
+type SlotMap = Record<string, SlotDish[]>
 
 export function WeekPlanner() {
   const [monday, setMonday] = useState(() => getMondayOf(new Date()))
@@ -29,11 +35,9 @@ export function WeekPlanner() {
       const data = await getWeekWithSlots(week.id)
       const map: SlotMap = {}
       for (const s of data) {
-        map[`${s.day_of_week}-${s.meal_type}`] = {
-          dish_id: s.dish_id ?? null,
-          dish_name: s.dish_name ?? null,
-          dish_verified: s.dish_verified ?? null,
-        }
+        const key = `${s.day_of_week}-${s.meal_type}`
+        if (!map[key]) map[key] = []
+        map[key].push({ dish_id: s.dish_id, dish_name: s.dish_name, dish_verified: s.dish_verified })
       }
       setSlots(map)
     })
@@ -43,30 +47,34 @@ export function WeekPlanner() {
 
   const days = getWeekDays(monday)
 
-  async function handleSelect(day: number, meal: MealType, dish: Dish) {
+  async function handleAdd(day: number, meal: MealType, dish: Dish) {
     if (!weekId) return
-    await setMealSlot(weekId, day, meal, dish.id)
-    setSlots(prev => ({
-      ...prev,
-      [`${day}-${meal}`]: { dish_id: dish.id, dish_name: dish.name, dish_verified: dish.verified },
-    }))
+    await addDishToSlot(weekId, day, meal, dish.id)
+    setSlots(prev => {
+      const key = `${day}-${meal}`
+      const existing = prev[key] ?? []
+      if (existing.some(d => d.dish_id === dish.id)) return prev
+      return {
+        ...prev,
+        [key]: [...existing, { dish_id: dish.id, dish_name: dish.name, dish_verified: dish.verified }],
+      }
+    })
   }
 
-  async function handleClear(day: number, meal: MealType) {
+  async function handleRemove(day: number, meal: MealType, dishId: number) {
     if (!weekId) return
-    await clearMealSlot(weekId, day, meal)
+    await removeDishFromSlot(weekId, day, meal, dishId)
     setSlots(prev => {
-      const next = { ...prev }
-      delete next[`${day}-${meal}`]
-      return next
+      const key = `${day}-${meal}`
+      return { ...prev, [key]: (prev[key] ?? []).filter(d => d.dish_id !== dishId) }
     })
   }
 
   const isCurrent = isCurrentWeek(monday)
+  const pickerSlotDishes = picker ? (slots[`${picker.day}-${picker.meal}`] ?? []) : []
 
   return (
     <div className="px-3 pt-4 pb-2">
-      <h1 className="text-center text-lg font-bold mb-3" style={{ color: "var(--foreground)" }}>FRANCOISE I LOVE U</h1>
       {/* Header semana */}
       <div className="flex items-center justify-between mb-4 gap-2">
         <Button variant="ghost" size="icon" onClick={() => setMonday(prevWeek(monday))}>
@@ -105,17 +113,16 @@ export function WeekPlanner() {
               </div>
               <div className="grid grid-cols-3 gap-1.5">
                 {MEALS.map(meal => {
-                  const slot = slots[`${day}-${meal}`]
+                  const slotDishes = slots[`${day}-${meal}`] ?? []
                   return (
                     <div key={meal}>
                       <div className="text-[10px] text-center mb-1 capitalize" style={{ color: "var(--muted-foreground)" }}>
                         {meal}
                       </div>
                       <MealSlotButton
-                        dishName={slot?.dish_name}
-                        verified={slot?.dish_verified}
+                        dishes={slotDishes}
                         onClick={() => setPicker({ day, meal })}
-                        onClear={slot?.dish_id ? () => handleClear(day, meal) : undefined}
+                        onRemove={dishId => handleRemove(day, meal, dishId)}
                       />
                     </div>
                   )
@@ -130,7 +137,9 @@ export function WeekPlanner() {
         open={!!picker}
         onClose={() => setPicker(null)}
         title={picker ? `${DAYS[picker.day - 1]} — ${picker.meal}` : ""}
-        onSelect={dish => picker && handleSelect(picker.day, picker.meal, dish)}
+        selectedDishes={pickerSlotDishes}
+        onAdd={dish => picker && handleAdd(picker.day, picker.meal, dish)}
+        onRemove={dishId => picker && handleRemove(picker.day, picker.meal, dishId)}
       />
     </div>
   )

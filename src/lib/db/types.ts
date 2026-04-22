@@ -39,7 +39,7 @@ export interface MealSlotsTable {
   week_id:     number
   day_of_week: number
   meal_type:   "desayuno" | "almuerzo" | "cena"
-  dish_id:     number | null
+  dish_id:     number
 }
 
 export interface Database {

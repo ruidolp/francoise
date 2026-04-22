@@ -2,18 +2,23 @@
 
 import { CheckCircle, Plus, X } from "lucide-react"
 
-interface Props {
-  dishName?: string | null
-  verified?: boolean | null
-  onClick: () => void
-  onClear?: () => void
+interface SlotDish {
+  dish_id: number
+  dish_name: string
+  dish_verified: boolean | null
 }
 
-export function MealSlotButton({ dishName, verified, onClick, onClear }: Props) {
-  if (!dishName) {
+interface Props {
+  dishes: SlotDish[]
+  onClick: () => void
+  onRemove: (dishId: number) => void
+}
+
+export function MealSlotButton({ dishes, onClick, onRemove }: Props) {
+  if (dishes.length === 0) {
     return (
       <button onClick={onClick}
-        className="w-full h-10 rounded-lg flex items-center justify-center text-xs transition-colors"
+        className="w-full min-h-10 rounded-lg flex items-center justify-center text-xs transition-colors"
         style={{ background: "var(--slot-empty)", color: "var(--muted-foreground)", border: "1px dashed var(--border)" }}>
         <Plus size={14} />
       </button>
@@ -21,20 +26,35 @@ export function MealSlotButton({ dishName, verified, onClick, onClear }: Props) 
   }
 
   return (
-    <div className="relative w-full">
+    <div className="w-full rounded-lg overflow-hidden"
+      style={{ border: "1px solid var(--border)", background: "var(--slot-filled)" }}>
+      {dishes.map((d, i) => (
+        <div key={d.dish_id}
+          className="flex items-center gap-1 px-2 py-1.5"
+          style={{ borderTop: i > 0 ? "1px solid var(--border)" : undefined }}>
+          {d.dish_verified && <CheckCircle size={10} style={{ color: "var(--verified)", flexShrink: 0 }} />}
+          <span className="flex-1 text-[11px] font-medium leading-tight truncate"
+            style={{ color: "var(--foreground)" }}>
+            {d.dish_name}
+          </span>
+          <button
+            onClick={e => { e.stopPropagation(); onRemove(d.dish_id) }}
+            className="flex-shrink-0 p-0.5 rounded"
+            style={{ color: "var(--muted-foreground)" }}>
+            <X size={11} />
+          </button>
+        </div>
+      ))}
       <button onClick={onClick}
-        className="w-full h-10 rounded-lg px-2 pr-7 flex items-center gap-1 text-xs font-medium text-left transition-colors"
-        style={{ background: "var(--slot-filled)", color: "var(--foreground)", border: "1px solid var(--border)" }}>
-        {verified && <CheckCircle size={12} style={{ color: "var(--verified)", flexShrink: 0 }} />}
-        <span className="truncate">{dishName}</span>
+        className="w-full flex items-center justify-center gap-1 py-1 text-[10px] transition-colors"
+        style={{
+          borderTop: "1px dashed var(--border)",
+          color: "var(--muted-foreground)",
+          background: "var(--slot-empty)",
+        }}>
+        <Plus size={10} />
+        <span>añadir</span>
       </button>
-      {onClear && (
-        <button onClick={e => { e.stopPropagation(); onClear() }}
-          className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-full p-0.5"
-          style={{ color: "var(--muted-foreground)" }}>
-          <X size={12} />
-        </button>
-      )}
     </div>
   )
 }

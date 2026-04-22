@@ -39,8 +39,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="es" suppressHydrationWarning data-theme="natural" className={nunito.variable}>
       <body>
         <ThemeProvider>
-          <header className="sticky top-0 z-40 flex justify-end px-3 py-2"
+          <header className="sticky top-0 z-40 flex items-center justify-between px-4 py-2"
             style={{ background: "var(--background)", borderBottom: "1px solid var(--border)" }}>
+            <span className="text-sm font-black tracking-widest uppercase"
+              style={{ color: "var(--primary)", letterSpacing: "0.15em" }}>
+              FRANCOISE I LOVE U
+            </span>
             <ThemeSelector />
           </header>
           <main className="pb-20">
