@@ -1,0 +1,121 @@
+/* =====================================================
+   SISTEMA DE TEMAS - Agrega un nuevo tema aquí y
+   todo el sitio lo adoptará automáticamente.
+   ===================================================== */
+
+/* Tema: Natural (verde) */
+[data-theme="natural"] {
+  --background:         #f7f9f4;
+  --foreground:         #1a2e1a;
+  --card:               #ffffff;
+  --card-foreground:    #1a2e1a;
+  --popover:            #ffffff;
+  --popover-foreground: #1a2e1a;
+  --primary:            #3a7d44;
+  --primary-foreground: #ffffff;
+  --secondary:          #d4edda;
+  --secondary-foreground:#1a2e1a;
+  --muted:              #e8f3e8;
+  --muted-foreground:   #5a7a5a;
+  --accent:             #52b788;
+  --accent-foreground:  #ffffff;
+  --destructive:        #d62828;
+  --destructive-foreground: #ffffff;
+  --border:             #c3dfc3;
+  --input:              #c3dfc3;
+  --ring:               #3a7d44;
+  --verified:           #2563eb;
+  --nav-bg:             #ffffff;
+  --nav-border:         #c3dfc3;
+  --slot-empty:         #eef5ee;
+  --slot-filled:        #d4edda;
+}
+
+/* Tema: Océano (azul) */
+[data-theme="oceano"] {
+  --background:         #f0f6ff;
+  --foreground:         #0d1b2a;
+  --card:               #ffffff;
+  --card-foreground:    #0d1b2a;
+  --popover:            #ffffff;
+  --popover-foreground: #0d1b2a;
+  --primary:            #1565c0;
+  --primary-foreground: #ffffff;
+  --secondary:          #bbdefb;
+  --secondary-foreground:#0d1b2a;
+  --muted:              #e3f2fd;
+  --muted-foreground:   #4a6fa5;
+  --accent:             #0288d1;
+  --accent-foreground:  #ffffff;
+  --destructive:        #c62828;
+  --destructive-foreground: #ffffff;
+  --border:             #90caf9;
+  --input:              #90caf9;
+  --ring:               #1565c0;
+  --verified:           #1565c0;
+  --nav-bg:             #ffffff;
+  --nav-border:         #90caf9;
+  --slot-empty:         #e8f4fd;
+  --slot-filled:        #bbdefb;
+}
+
+/* Tema: Cálido (naranja/terracota) */
+[data-theme="calido"] {
+  --background:         #fff8f3;
+  --foreground:         #2d1a0e;
+  --card:               #ffffff;
+  --card-foreground:    #2d1a0e;
+  --popover:            #ffffff;
+  --popover-foreground: #2d1a0e;
+  --primary:            #c2570a;
+  --primary-foreground: #ffffff;
+  --secondary:          #fde0c8;
+  --secondary-foreground:#2d1a0e;
+  --muted:              #fef0e6;
+  --muted-foreground:   #8b5e3c;
+  --accent:             #e07b39;
+  --accent-foreground:  #ffffff;
+  --destructive:        #b91c1c;
+  --destructive-foreground: #ffffff;
+  --border:             #f5c8a0;
+  --input:              #f5c8a0;
+  --ring:               #c2570a;
+  --verified:           #2563eb;
+  --nav-bg:             #ffffff;
+  --nav-border:         #f5c8a0;
+  --slot-empty:         #fff4ec;
+  --slot-filled:        #fde0c8;
+}
+
+/* =====================================================
+   Para agregar un nuevo tema, copia este bloque:
+
+[data-theme="mi-tema"] {
+  --background:         #...;
+  --foreground:         #...;
+  --card:               #...;
+  --card-foreground:    #...;
+  --popover:            #...;
+  --popover-foreground: #...;
+  --primary:            #...;
+  --primary-foreground: #...;
+  --secondary:          #...;
+  --secondary-foreground:#...;
+  --muted:              #...;
+  --muted-foreground:   #...;
+  --accent:             #...;
+  --accent-foreground:  #...;
+  --destructive:        #...;
+  --destructive-foreground: #...;
+  --border:             #...;
+  --input:              #...;
+  --ring:               #...;
+  --verified:           #...;
+  --nav-bg:             #...;
+  --nav-border:         #...;
+  --slot-empty:         #...;
+  --slot-filled:        #...;
+}
+
+Luego agrega "mi-tema" al array THEMES en src/lib/themes.ts
+===================================================== */
