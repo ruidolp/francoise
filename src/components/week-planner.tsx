@@ -66,6 +66,7 @@ export function WeekPlanner() {
 
   return (
     <div className="px-3 pt-4 pb-2">
+      <h1 className="text-center text-lg font-bold mb-3" style={{ color: "var(--foreground)" }}>FRANCOISE I LOVE U</h1>
       {/* Header semana */}
       <div className="flex items-center justify-between mb-4 gap-2">
         <Button variant="ghost" size="icon" onClick={() => setMonday(prevWeek(monday))}>

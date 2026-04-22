@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useTransition } from "react"
-import { Plus, CheckCircle, Search, ToggleLeft, ToggleRight, Loader2, ChevronDown } from "lucide-react"
+import { Plus, CheckCircle, ToggleLeft, ToggleRight, Loader2, ChevronDown } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { DishEditorSheet } from "@/components/dish-editor-sheet"
@@ -10,26 +10,17 @@ import type { Dish } from "@/lib/db/types"
 
 export function DishesPage() {
   const [dishes, setDishes] = useState<Dish[]>([])
-  const [search, setSearch] = useState("")
   const [showQuantities, setShowQuantities] = useState(false)
   const [editing, setEditing] = useState<Dish | null>(null)
   const [newName, setNewName] = useState("")
   const [creating, setCreating] = useState(false)
   const [pending, startTransition] = useTransition()
-  const [showSearch, setShowSearch] = useState(false)
 
   useEffect(() => {
     startTransition(async () => {
       setDishes(await getDishes())
     })
   }, [])
-
-  useEffect(() => {
-    const t = setTimeout(() => {
-      startTransition(async () => setDishes(await getDishes(search)))
-    }, 250)
-    return () => clearTimeout(t)
-  }, [search])
 
   async function handleCreate() {
     if (!newName.trim()) return
@@ -76,32 +67,6 @@ export function DishesPage() {
         </Button>
       </div>
 
-      {/* Botón de búsqueda */}
-      {!showSearch && (
-        <div className="mb-4">
-          <Button onClick={() => setShowSearch(true)} variant="outline" size="sm" className="w-full justify-start"
-            style={{ borderColor: "var(--border)", background: "var(--muted)", color: "var(--muted-foreground)" }}>
-            <Search size={14} className="mr-2" />
-            Buscar plato...
-          </Button>
-        </div>
-      )}
-
-      {/* Input de búsqueda inline */}
-      {showSearch && (
-        <div className="relative mb-4">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--muted-foreground)" }} />
-          <Input
-            placeholder="Buscar plato..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            onBlur={() => !search && setShowSearch(false)}
-            className="pl-8"
-            autoFocus
-            style={{ borderColor: "var(--border)", background: "var(--muted)" }}
-          />
-        </div>
-      )}
 
       {/* Lista */}
       {pending && dishes.length === 0 && (
@@ -126,7 +91,7 @@ export function DishesPage() {
 
         {!pending && dishes.length === 0 && (
           <p className="text-center text-sm py-10" style={{ color: "var(--muted-foreground)" }}>
-            {search ? "Sin resultados." : "Aún no tienes platos. ¡Crea el primero!"}
+            {"Aún no tienes platos. ¡Crea el primero!"}
           </p>
         )}
       </div>

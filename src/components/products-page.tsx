@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useTransition } from "react"
-import { Plus, Trash2, Pencil, Check, X, Loader2, Search } from "lucide-react"
+import { Plus, Trash2, Pencil, Check, X, Loader2 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { getAllProducts, createProduct, deleteProduct, updateProduct } from "@/lib/actions/products"
@@ -9,8 +9,6 @@ import type { Product } from "@/lib/db/types"
 
 export function ProductsPage() {
   const [products, setProducts] = useState<Product[]>([])
-  const [filtered, setFiltered] = useState<Product[]>([])
-  const [search, setSearch] = useState("")
   const [newName, setNewName] = useState("")
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editingName, setEditingName] = useState("")
@@ -20,14 +18,8 @@ export function ProductsPage() {
     startTransition(async () => {
       const all = await getAllProducts()
       setProducts(all)
-      setFiltered(all)
     })
   }, [])
-
-  useEffect(() => {
-    const q = search.toLowerCase()
-    setFiltered(q ? products.filter(p => p.name.includes(q)) : products)
-  }, [search, products])
 
   async function handleCreate() {
     if (!newName.trim()) return
@@ -67,19 +59,8 @@ export function ProductsPage() {
         </Button>
       </div>
 
-      <div className="relative mb-4">
-        <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: "var(--muted-foreground)" }} />
-        <Input
-          placeholder="Buscar..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="pl-8"
-          style={{ borderColor: "var(--border)", background: "var(--muted)" }}
-        />
-      </div>
-
       <p className="text-xs mb-3" style={{ color: "var(--muted-foreground)" }}>
-        {filtered.length} productos
+        {products.length} productos
       </p>
 
       {pending && products.length === 0 && (
@@ -89,7 +70,7 @@ export function ProductsPage() {
       )}
 
       <div className="space-y-1.5">
-        {filtered.map(product => (
+        {products.map(product => (
           <div key={product.id} className="flex items-center gap-2 p-3 rounded-xl"
             style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
             {editingId === product.id ? (

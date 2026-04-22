@@ -26,5 +26,5 @@ export function formatWeekRange(monday: Date) {
 }
 
 export function formatShortDay(date: Date) {
-  return format(date, "EEE d", { locale: es })
+  return format(date, "EEEE d", { locale: es })
 }
