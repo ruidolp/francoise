@@ -3,60 +3,60 @@
    todo el sitio lo adoptará automáticamente.
    ===================================================== */
 
-/* Tema: Natural (verde) */
-[data-theme="natural"] {
-  --background:         #f7f9f4;
-  --foreground:         #1a2e1a;
+/* Tema: Clásico (blanco y negro) */
+[data-theme="clasico"] {
+  --background:         #f9f9f9;
+  --foreground:         #111111;
   --card:               #ffffff;
-  --card-foreground:    #1a2e1a;
+  --card-foreground:    #111111;
   --popover:            #ffffff;
-  --popover-foreground: #1a2e1a;
-  --primary:            #3a7d44;
+  --popover-foreground: #111111;
+  --primary:            #1a1a1a;
   --primary-foreground: #ffffff;
-  --secondary:          #d4edda;
-  --secondary-foreground:#1a2e1a;
-  --muted:              #e8f3e8;
-  --muted-foreground:   #5a7a5a;
-  --accent:             #52b788;
+  --secondary:          #eeeeee;
+  --secondary-foreground:#111111;
+  --muted:              #f3f3f3;
+  --muted-foreground:   #666666;
+  --accent:             #444444;
   --accent-foreground:  #ffffff;
-  --destructive:        #d62828;
+  --destructive:        #cc0000;
   --destructive-foreground: #ffffff;
-  --border:             #c3dfc3;
-  --input:              #c3dfc3;
-  --ring:               #3a7d44;
-  --verified:           #2563eb;
+  --border:             #d4d4d4;
+  --input:              #d4d4d4;
+  --ring:               #1a1a1a;
+  --verified:           #1a1a1a;
   --nav-bg:             #ffffff;
-  --nav-border:         #c3dfc3;
-  --slot-empty:         #eef5ee;
-  --slot-filled:        #d4edda;
+  --nav-border:         #d4d4d4;
+  --slot-empty:         #f3f3f3;
+  --slot-filled:        #e5e5e5;
 }
 
-/* Tema: Océano (azul) */
-[data-theme="oceano"] {
-  --background:         #f0f6ff;
-  --foreground:         #0d1b2a;
+/* Tema: Sol (amarillo amigable) */
+[data-theme="sol"] {
+  --background:         #fffbeb;
+  --foreground:         #1c1400;
   --card:               #ffffff;
-  --card-foreground:    #0d1b2a;
+  --card-foreground:    #1c1400;
   --popover:            #ffffff;
-  --popover-foreground: #0d1b2a;
-  --primary:            #1565c0;
+  --popover-foreground: #1c1400;
+  --primary:            #d97706;
   --primary-foreground: #ffffff;
-  --secondary:          #bbdefb;
-  --secondary-foreground:#0d1b2a;
-  --muted:              #e3f2fd;
-  --muted-foreground:   #4a6fa5;
-  --accent:             #0288d1;
+  --secondary:          #fef3c7;
+  --secondary-foreground:#1c1400;
+  --muted:              #fef9ee;
+  --muted-foreground:   #92620a;
+  --accent:             #f59e0b;
   --accent-foreground:  #ffffff;
-  --destructive:        #c62828;
+  --destructive:        #b91c1c;
   --destructive-foreground: #ffffff;
-  --border:             #90caf9;
-  --input:              #90caf9;
-  --ring:               #1565c0;
-  --verified:           #1565c0;
+  --border:             #fde68a;
+  --input:              #fde68a;
+  --ring:               #d97706;
+  --verified:           #d97706;
   --nav-bg:             #ffffff;
-  --nav-border:         #90caf9;
-  --slot-empty:         #e8f4fd;
-  --slot-filled:        #bbdefb;
+  --nav-border:         #fde68a;
+  --slot-empty:         #fefce8;
+  --slot-filled:        #fef3c7;
 }
 
 /* Tema: Cálido (naranja/terracota) */

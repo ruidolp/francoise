@@ -1,6 +1,6 @@
 export const THEMES = [
-  { id: "natural", label: "Natural",  emoji: "🌿" },
-  { id: "oceano",  label: "Océano",   emoji: "🌊" },
+  { id: "clasico", label: "Clásico",  emoji: "🖤" },
+  { id: "sol",     label: "Sol",      emoji: "☀️" },
   { id: "calido",  label: "Cálido",   emoji: "🍊" },
 ] as const
 

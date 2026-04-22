@@ -36,7 +36,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es" suppressHydrationWarning data-theme="natural" className={nunito.variable}>
+    <html lang="es" suppressHydrationWarning data-theme="calido" className={nunito.variable}>
       <body>
         <ThemeProvider>
           <header className="sticky top-0 z-40 flex items-center justify-between px-4 py-2"
