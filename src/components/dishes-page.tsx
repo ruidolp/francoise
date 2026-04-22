@@ -8,7 +8,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog"
 import { DishEditorSheet } from "@/components/dish-editor-sheet"
-import { getDishes, createDish, deleteDish } from "@/lib/actions/dishes"
+import { getDishes, createDish } from "@/lib/actions/dishes"
 import type { Dish } from "@/lib/db/types"
 
 export function DishesPage() {
@@ -42,8 +42,7 @@ export function DishesPage() {
     setCreating(false)
   }
 
-  async function handleDelete(id: number) {
-    await deleteDish(id)
+  function handleDelete(id: number) {
     setDishes(prev => prev.filter(d => d.id !== id))
   }
 

@@ -76,7 +76,7 @@ export function ProductAutocomplete({ onSelect, placeholder = "Agregar ingredien
             <button key={p.id} onMouseDown={e => { e.preventDefault(); select(p) }}
               className="w-full text-left px-3 py-2.5 text-sm"
               style={{ color: "var(--foreground)" }}>
-              {p.name}
+              {p.name.charAt(0).toUpperCase() + p.name.slice(1)}
             </button>
           ))}
           {showCreate && (

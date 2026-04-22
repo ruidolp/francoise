@@ -35,6 +35,7 @@ export function DishEditorSheet({ dish, open, onClose, onSaved, onDeleted, showQ
   const [saving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [deleteError, setDeleteError] = useState<string | null>(null)
   const dishIdRef = useRef<number | null>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
@@ -42,6 +43,7 @@ export function DishEditorSheet({ dish, open, onClose, onSaved, onDeleted, showQ
     if (!open || !dish) {
       setIngredients([])
       setConfirmDelete(false)
+      setDeleteError(null)
       return
     }
     setName(dish.name)
@@ -106,10 +108,16 @@ export function DishEditorSheet({ dish, open, onClose, onSaved, onDeleted, showQ
   async function handleDelete() {
     if (!dish || deleting) return
     setDeleting(true)
+    setDeleteError(null)
     try {
-      await deleteDish(dish.id)
-      onDeleted(dish.id)
-      onClose()
+      const result = await deleteDish(dish.id)
+      if ("error" in result) {
+        setDeleteError(result.error)
+        setConfirmDelete(false)
+      } else {
+        onDeleted(dish.id)
+        onClose()
+      }
     } finally {
       setDeleting(false)
     }
@@ -249,6 +257,13 @@ export function DishEditorSheet({ dish, open, onClose, onSaved, onDeleted, showQ
               : <><CheckCircle size={18} className="mr-2" /> Guardar plato</>
             }
           </Button>
+
+          {deleteError && (
+            <div className="px-3 py-2.5 rounded-xl text-sm"
+              style={{ background: "color-mix(in srgb, var(--destructive) 12%, transparent)", color: "var(--destructive)", border: "1px solid color-mix(in srgb, var(--destructive) 30%, transparent)" }}>
+              {deleteError}
+            </div>
+          )}
 
           {dish && !confirmDelete && (
             <button

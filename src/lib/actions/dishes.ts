@@ -57,10 +57,25 @@ export async function updateDish(id: number, data: { name?: string; verified?: b
   return dish
 }
 
-export async function deleteDish(id: number) {
+const DAY_NAMES = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"]
+
+export async function deleteDish(id: number): Promise<{ ok: true } | { error: string }> {
+  const slots = await db
+    .selectFrom("meal_slots")
+    .select(["day_of_week", "meal_type"])
+    .where("dish_id", "=", id)
+    .limit(3)
+    .execute()
+
+  if (slots.length > 0) {
+    const places = slots.map(s => `${DAY_NAMES[s.day_of_week - 1] ?? `día ${s.day_of_week}`} (${s.meal_type})`).join(", ")
+    return { error: `Este plato está asignado en: ${places}. Quítalo del planificador antes de eliminarlo.` }
+  }
+
   await db.deleteFrom("dish_ingredients").where("dish_id", "=", id).execute()
   await db.deleteFrom("dishes").where("id", "=", id).execute()
   revalidatePath("/platos")
+  return { ok: true }
 }
 
 export async function saveDishIngredients(
