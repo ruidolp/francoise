@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useTransition, useCallback } from "react"
-import { ChevronLeft, ChevronRight, Home, Plus, CheckCircle } from "lucide-react"
+import { ChevronLeft, ChevronRight, Home, CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DishPickerSheet } from "@/components/dish-picker-sheet"
 import { getOrCreateWeek, getWeekWithSlots, addDishToSlot, removeDishFromSlot } from "@/lib/actions/weeks"
@@ -110,7 +110,7 @@ export function WeekPlanner() {
               <div className="text-sm font-semibold mb-2 capitalize" style={{ color: "var(--primary)" }}>
                 {formatShortDay(date)}
               </div>
-              <div className="space-y-1">
+              <div className="divide-y" style={{ borderColor: "var(--border)" }}>
                 {MEALS.map(meal => {
                   const slotDishes = slots[`${day}-${meal}`] ?? []
                   const isEmpty = slotDishes.length === 0
@@ -119,23 +119,16 @@ export function WeekPlanner() {
                     <button
                       key={meal}
                       onClick={() => setPicker({ day, meal })}
-                      className="w-full flex items-start gap-2 rounded-lg px-2 py-1.5 text-left transition-colors"
-                      style={{
-                        background: isEmpty ? "var(--slot-empty)" : "var(--slot-filled)",
-                        border: "1px solid var(--border)",
-                      }}
+                      className="w-full flex items-baseline gap-2 py-1.5 px-1 text-left"
                     >
                       <span
-                        className="text-[10px] font-bold uppercase shrink-0 w-[68px] pt-px tracking-wide"
-                        style={{ color: "var(--primary)" }}
+                        className="text-[10px] font-medium shrink-0 w-[64px] capitalize"
+                        style={{ color: "var(--muted-foreground)" }}
                       >
                         {meal}
                       </span>
                       {isEmpty ? (
-                        <span className="flex items-center gap-1 text-[11px]" style={{ color: "var(--muted-foreground)" }}>
-                          <Plus size={10} />
-                          añadir
-                        </span>
+                        <span className="text-[11px]" style={{ color: "var(--border)" }}>—</span>
                       ) : (
                         <span
                           className="flex-1 text-[11px] font-medium leading-snug"
@@ -145,7 +138,7 @@ export function WeekPlanner() {
                         </span>
                       )}
                       {anyVerified && (
-                        <CheckCircle size={10} className="shrink-0 mt-px" style={{ color: "var(--verified)" }} />
+                        <CheckCircle size={10} className="shrink-0" style={{ color: "var(--verified)" }} />
                       )}
                     </button>
                   )
