@@ -271,7 +271,7 @@ export function DishEditorSheet({ dish, open, onClose, onSaved, onDeleted, showQ
                     />
                     <Select
                       value={ing.unit_id != null ? ing.unit_id.toString() : ""}
-                      onValueChange={v => setUnit(ing.product_id, v)}>
+                      onValueChange={v => setUnit(ing.product_id, v ?? "")}>
                       <SelectTrigger className="w-20 h-8 text-xs" style={{ borderColor: "var(--border)" }}>
                         <SelectValue>
                           {(v: string | null) => v
