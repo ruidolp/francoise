@@ -14,7 +14,7 @@ import { DISH_CATEGORIES, MEAL_SECTIONS } from "@/lib/db/types"
 
 export function DishesPage() {
   const [dishes, setDishes] = useState<Dish[]>([])
-  const [showQuantities, setShowQuantities] = useState(false)
+  const [showQuantities, setShowQuantities] = useState(true)
   const [editing, setEditing] = useState<Dish | null>(null)
   const [createOpen, setCreateOpen] = useState(false)
   const [newName, setNewName] = useState("")
