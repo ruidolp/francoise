@@ -98,13 +98,13 @@ export function DishesPage() {
                 {/* Cabecera de categoría */}
                 <button
                   onClick={() => toggleCategory(cat.value)}
-                  className="w-full flex items-center gap-3 px-3 py-3 text-left"
-                  style={{ background: "var(--card)" }}>
+                  className="w-full flex items-center gap-3 px-3 py-3 text-left transition-colors"
+                  style={{ background: expanded ? "color-mix(in srgb, var(--primary) 10%, var(--card))" : "var(--card)" }}>
                   {expanded
-                    ? <ChevronDown size={16} style={{ color: "var(--muted-foreground)", flexShrink: 0 }} />
+                    ? <ChevronDown size={16} style={{ color: expanded ? "var(--primary)" : "var(--muted-foreground)", flexShrink: 0 }} />
                     : <ChevronRight size={16} style={{ color: "var(--muted-foreground)", flexShrink: 0 }} />
                   }
-                  <span className="flex-1 text-sm font-semibold" style={{ color: "var(--foreground)" }}>
+                  <span className="flex-1 text-sm font-semibold" style={{ color: expanded ? "var(--primary)" : "var(--foreground)" }}>
                     {cat.label}
                   </span>
                   <span className="text-xs font-medium px-2 py-0.5 rounded-full"

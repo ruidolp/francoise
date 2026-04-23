@@ -30,7 +30,7 @@ export async function getWeekWithSlots(weekId: number) {
     .innerJoin("dishes as d", "d.id", "ms.dish_id")
     .select([
       "ms.id", "ms.day_of_week", "ms.meal_type", "ms.dish_id",
-      "d.name as dish_name", "d.verified as dish_verified",
+      "d.name as dish_name", "d.verified as dish_verified", "d.category as dish_category",
     ])
     .where("ms.week_id", "=", weekId)
     .execute()

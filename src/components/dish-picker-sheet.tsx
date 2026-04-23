@@ -34,11 +34,11 @@ export function DishPickerSheet({ open, onClose, title, meal, selectedDishes, on
   const [search, setSearch] = useState("")
   const [dishes, setDishes] = useState<Dish[]>([])
   const [pending, startTransition] = useTransition()
-  const [expandedCategories, setExpandedCategories] = useState<Set<DishCategory>>(new Set())
+  const [expandedCategory, setExpandedCategory] = useState<DishCategory | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    if (!open) { setSearch(""); setExpandedCategories(new Set()); return }
+    if (!open) { setSearch(""); setExpandedCategory(null); return }
     setTimeout(() => inputRef.current?.focus(), 100)
     startTransition(async () => setDishes(await getDishes()))
   }, [open])
@@ -51,11 +51,7 @@ export function DishPickerSheet({ open, onClose, title, meal, selectedDishes, on
   }, [search])
 
   function toggleCategory(cat: DishCategory) {
-    setExpandedCategories(prev => {
-      const next = new Set(prev)
-      next.has(cat) ? next.delete(cat) : next.add(cat)
-      return next
-    })
+    setExpandedCategory(prev => prev === cat ? null : cat)
   }
 
   const selectedIds = new Set(selectedDishes.map(d => d.dish_id))
@@ -185,19 +181,19 @@ export function DishPickerSheet({ open, onClose, title, meal, selectedDishes, on
               {!isSearching && DISH_CATEGORIES.map(cat => {
                 const group = filteredDishes.filter(d => d.category === cat.value)
                 if (group.length === 0) return null
-                const expanded = expandedCategories.has(cat.value)
+                const expanded = expandedCategory === cat.value
                 return (
                   <div key={cat.value} className="rounded-xl overflow-hidden"
                     style={{ border: "1px solid var(--border)", background: "var(--card)" }}>
                     <button
                       onClick={() => toggleCategory(cat.value)}
-                      className="w-full flex items-center gap-3 px-3 py-3 text-left"
-                      style={{ background: "var(--card)" }}>
+                      className="w-full flex items-center gap-3 px-3 py-3 text-left transition-colors"
+                      style={{ background: expanded ? "color-mix(in srgb, var(--primary) 10%, var(--card))" : "var(--card)" }}>
                       {expanded
-                        ? <ChevronDown size={16} style={{ color: "var(--muted-foreground)", flexShrink: 0 }} />
+                        ? <ChevronDown size={16} style={{ color: expanded ? "var(--primary)" : "var(--muted-foreground)", flexShrink: 0 }} />
                         : <ChevronRight size={16} style={{ color: "var(--muted-foreground)", flexShrink: 0 }} />
                       }
-                      <span className="flex-1 text-sm font-semibold" style={{ color: "var(--foreground)" }}>
+                      <span className="flex-1 text-sm font-semibold" style={{ color: expanded ? "var(--primary)" : "var(--foreground)" }}>
                         {cat.label}
                       </span>
                       <span className="text-xs font-medium px-2 py-0.5 rounded-full"
