@@ -73,7 +73,8 @@ export function DishEditorSheet({ dish, open, onClose, onSaved, onDeleted, showQ
   function addIngredient(product: Product) {
     setIngredients(prev => {
       if (prev.some(i => i.product_id === product.id)) return prev
-      const next = [...prev, { product_id: product.id, product_name: product.name, quantity: null, unit_id: null }]
+      const defaultUnitId = units.length > 0 ? units[0].id : null
+      const next = [...prev, { product_id: product.id, product_name: product.name, quantity: null, unit_id: defaultUnitId }]
       setTimeout(() => {
         if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight
       }, 0)
