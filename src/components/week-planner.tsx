@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect, useTransition, useCallback } from "react"
-import { ChevronLeft, ChevronRight, Home, CheckCircle } from "lucide-react"
+import { useState, useEffect, useTransition, useCallback, useMemo } from "react"
+import { ChevronLeft, ChevronRight, ChevronDown, Home, CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DishPickerSheet } from "@/components/dish-picker-sheet"
 import { getOrCreateWeek, getWeekWithSlots, addDishToSlot, removeDishFromSlot } from "@/lib/actions/weeks"
@@ -21,10 +21,12 @@ interface SlotDish {
 type SlotMap = Record<string, SlotDish[]>
 
 export function WeekPlanner() {
+  const todayDayIdx = useMemo(() => (new Date().getDay() + 6) % 7 + 1, [])
   const [monday, setMonday] = useState(() => getMondayOf(new Date()))
   const [weekId, setWeekId] = useState<number | null>(null)
   const [slots, setSlots] = useState<SlotMap>({})
   const [picker, setPicker] = useState<{ day: number; meal: MealType } | null>(null)
+  const [expandedDay, setExpandedDay] = useState<number | null>(todayDayIdx)
   const [, startTransition] = useTransition()
 
   const loadWeek = useCallback((mon: Date) => {
@@ -42,7 +44,10 @@ export function WeekPlanner() {
     })
   }, [])
 
-  useEffect(() => { loadWeek(monday) }, [monday, loadWeek])
+  useEffect(() => {
+    loadWeek(monday)
+    setExpandedDay(isCurrentWeek(monday) ? todayDayIdx : null)
+  }, [monday, loadWeek, todayDayIdx])
 
   const days = getWeekDays(monday)
 
@@ -102,48 +107,77 @@ export function WeekPlanner() {
       </div>
 
       {/* Grid de días */}
-      <div className="space-y-3">
+      <div className="space-y-2">
         {days.map((date, idx) => {
           const day = idx + 1
+          const expanded = expandedDay === day
+          const allDayDishes = MEALS.flatMap(m => slots[`${day}-${m}`] ?? [])
+          const totalDishes = allDayDishes.length
+          const anyVerified = allDayDishes.some(d => d.dish_verified)
           return (
-            <div key={day} className="rounded-2xl p-3" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
-              <div className="text-sm font-semibold mb-2 capitalize" style={{ color: "var(--primary)" }}>
-                {formatShortDay(date)}
-              </div>
-              <div className="divide-y" style={{ borderColor: "var(--border)" }}>
-                {MEALS.map(meal => {
-                  const slotDishes = slots[`${day}-${meal}`] ?? []
-                  const isEmpty = slotDishes.length === 0
-                  const anyVerified = slotDishes.some(d => d.dish_verified)
-                  return (
-                    <button
-                      key={meal}
-                      onClick={() => setPicker({ day, meal })}
-                      className="w-full flex items-baseline gap-2 py-1.5 px-1 text-left"
-                    >
-                      <span
-                        className="text-[10px] font-medium shrink-0 w-[64px] capitalize"
-                        style={{ color: "var(--muted-foreground)" }}
+            <div key={day} className="rounded-2xl overflow-hidden" style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
+              {/* Cabecera del día */}
+              <button
+                className="w-full flex items-center gap-2 px-3 py-2.5 text-left"
+                style={{ background: "var(--card)" }}
+                onClick={() => setExpandedDay(expanded ? null : day)}
+              >
+                <ChevronDown
+                  size={14}
+                  className="shrink-0 transition-transform duration-200"
+                  style={{ color: "var(--muted-foreground)", transform: expanded ? "rotate(0deg)" : "rotate(-90deg)" }}
+                />
+                <span className="flex-1 text-sm font-semibold capitalize" style={{ color: "var(--primary)" }}>
+                  {formatShortDay(date)}
+                </span>
+                {!expanded && totalDishes > 0 && (
+                  <span className="text-xs font-medium px-2 py-0.5 rounded-full"
+                    style={{ background: "var(--secondary)", color: "var(--muted-foreground)" }}>
+                    {totalDishes}
+                  </span>
+                )}
+                {!expanded && anyVerified && (
+                  <CheckCircle size={12} className="shrink-0" style={{ color: "var(--verified)" }} />
+                )}
+              </button>
+
+              {/* Detalle de comidas (expandido) */}
+              {expanded && (
+                <div className="divide-y" style={{ borderTop: "1px solid var(--border)", borderColor: "var(--border)" }}>
+                  {MEALS.map(meal => {
+                    const slotDishes = slots[`${day}-${meal}`] ?? []
+                    const isEmpty = slotDishes.length === 0
+                    const mealVerified = slotDishes.some(d => d.dish_verified)
+                    return (
+                      <button
+                        key={meal}
+                        onClick={() => setPicker({ day, meal })}
+                        className="w-full flex items-baseline gap-2 py-1.5 px-3 text-left"
                       >
-                        {meal}
-                      </span>
-                      {isEmpty ? (
-                        <span className="text-[11px]" style={{ color: "var(--border)" }}>—</span>
-                      ) : (
                         <span
-                          className="flex-1 text-[11px] font-medium leading-snug"
-                          style={{ color: "var(--foreground)", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}
+                          className="text-[10px] font-medium shrink-0 w-[64px] capitalize"
+                          style={{ color: "var(--muted-foreground)" }}
                         >
-                          {slotDishes.map(d => d.dish_name).join(" · ")}
+                          {meal}
                         </span>
-                      )}
-                      {anyVerified && (
-                        <CheckCircle size={10} className="shrink-0" style={{ color: "var(--verified)" }} />
-                      )}
-                    </button>
-                  )
-                })}
-              </div>
+                        {isEmpty ? (
+                          <span className="text-[11px]" style={{ color: "var(--border)" }}>—</span>
+                        ) : (
+                          <span
+                            className="flex-1 text-[11px] font-medium leading-snug"
+                            style={{ color: "var(--foreground)", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}
+                          >
+                            {slotDishes.map(d => d.dish_name).join(" · ")}
+                          </span>
+                        )}
+                        {mealVerified && (
+                          <CheckCircle size={10} className="shrink-0" style={{ color: "var(--verified)" }} />
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
             </div>
           )
         })}

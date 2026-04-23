@@ -26,23 +26,29 @@ export async function getShoppingList(weekId: number) {
     product_id: number
     product_name: string
     count: number
-    quantities: Array<{ qty: number | null; unit: string | null; dish: string }>
+    quantities: Array<{ qty: number | null; unit: string | null }>
   }>()
 
   for (const row of rows) {
-    const entry = map.get(row.product_id) ?? {
-      product_id: row.product_id,
-      product_name: row.product_name,
-      count: 0,
-      quantities: [],
+    if (!map.has(row.product_id)) {
+      map.set(row.product_id, {
+        product_id: row.product_id,
+        product_name: row.product_name,
+        count: 0,
+        quantities: [],
+      })
     }
+    const entry = map.get(row.product_id)!
     entry.count++
-    entry.quantities.push({
-      qty: row.quantity ? Number(row.quantity) : null,
-      unit: row.unit_name ?? null,
-      dish: row.dish_name,
-    })
-    map.set(row.product_id, entry)
+
+    const unitKey = row.unit_name ?? "__none__"
+    const qty = row.quantity ? Number(row.quantity) : null
+    const existing = entry.quantities.find(q => (q.unit ?? "__none__") === unitKey)
+    if (existing) {
+      existing.qty = existing.qty != null && qty != null ? existing.qty + qty : existing.qty ?? qty
+    } else {
+      entry.quantities.push({ qty, unit: row.unit_name ?? null })
+    }
   }
 
   return Array.from(map.values()).sort((a, b) => a.product_name.localeCompare(b.product_name))

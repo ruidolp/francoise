@@ -14,7 +14,7 @@ interface ShoppingItem {
   product_id: number
   product_name: string
   count: number
-  quantities: Array<{ qty: number | null; unit: string | null; dish: string }>
+  quantities: Array<{ qty: number | null; unit: string | null }>
   checked: boolean
   manual?: boolean
 }
@@ -141,10 +141,14 @@ export function ShoppingPage() {
             <span className="flex-1 text-sm font-medium capitalize" style={{ color: "var(--foreground)" }}>
               {item.product_name}
             </span>
-            {item.count > 0 && (
+            {item.quantities.length > 0 && (
               <span className="text-xs px-1.5 py-0.5 rounded-full"
                 style={{ background: "var(--secondary)", color: "var(--secondary-foreground)" }}>
-                ({item.count})
+                {item.quantities.map(q =>
+                  q.qty != null && q.unit ? `${q.qty} ${q.unit}` :
+                  q.qty != null ? `${q.qty}` :
+                  q.unit ? q.unit : null
+                ).filter(Boolean).join(" · ")}
               </span>
             )}
             {item.manual && (

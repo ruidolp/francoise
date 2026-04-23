@@ -22,15 +22,11 @@ export function DishesPage() {
   const [newMealSections, setNewMealSections] = useState<MealSection[]>([])
   const [creating, setCreating] = useState(false)
   const [pending, startTransition] = useTransition()
-  const [expandedCategories, setExpandedCategories] = useState<Set<DishCategory>>(new Set())
+  const [expandedCategory, setExpandedCategory] = useState<DishCategory | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   function toggleCategory(cat: DishCategory) {
-    setExpandedCategories(prev => {
-      const next = new Set(prev)
-      next.has(cat) ? next.delete(cat) : next.add(cat)
-      return next
-    })
+    setExpandedCategory(prev => prev === cat ? null : cat)
   }
 
   useEffect(() => {
@@ -95,7 +91,7 @@ export function DishesPage() {
           {DISH_CATEGORIES.map(cat => {
             const group = dishes.filter(d => d.category === cat.value)
             if (group.length === 0) return null
-            const expanded = expandedCategories.has(cat.value)
+            const expanded = expandedCategory === cat.value
             return (
               <div key={cat.value} className="rounded-xl overflow-hidden"
                 style={{ border: "1px solid var(--border)", background: "var(--card)" }}>
