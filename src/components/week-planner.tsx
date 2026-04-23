@@ -153,6 +153,7 @@ export function WeekPlanner() {
         open={!!picker}
         onClose={() => setPicker(null)}
         title={picker ? `${DAYS[picker.day - 1]} — ${picker.meal}` : ""}
+        meal={picker?.meal ?? null}
         selectedDishes={pickerSlotDishes}
         onAdd={dish => picker && handleAdd(picker.day, picker.meal, dish)}
         onRemove={dishId => picker && handleRemove(picker.day, picker.meal, dishId)}

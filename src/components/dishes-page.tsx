@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef, useTransition } from "react"
-import { Plus, CheckCircle, ToggleLeft, ToggleRight, Loader2 } from "lucide-react"
+import { Plus, CheckCircle, ToggleLeft, ToggleRight, Loader2, ChevronDown, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -9,7 +9,6 @@ import {
 } from "@/components/ui/dialog"
 import { DishEditorSheet } from "@/components/dish-editor-sheet"
 import { getDishes, createDish } from "@/lib/actions/dishes"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import type { Dish, DishCategory, MealSection } from "@/lib/db/types"
 import { DISH_CATEGORIES, MEAL_SECTIONS } from "@/lib/db/types"
 
@@ -23,7 +22,16 @@ export function DishesPage() {
   const [newMealSections, setNewMealSections] = useState<MealSection[]>([])
   const [creating, setCreating] = useState(false)
   const [pending, startTransition] = useTransition()
+  const [expandedCategories, setExpandedCategories] = useState<Set<DishCategory>>(new Set())
   const inputRef = useRef<HTMLInputElement>(null)
+
+  function toggleCategory(cat: DishCategory) {
+    setExpandedCategories(prev => {
+      const next = new Set(prev)
+      next.has(cat) ? next.delete(cat) : next.add(cat)
+      return next
+    })
+  }
 
   useEffect(() => {
     startTransition(async () => {
@@ -77,30 +85,64 @@ export function DishesPage() {
         </button>
       </div>
 
-      {/* Lista */}
+      {/* Lista agrupada por categoría */}
       {pending && dishes.length === 0 ? (
         <div className="flex justify-center py-10">
           <Loader2 size={24} className="animate-spin" style={{ color: "var(--muted-foreground)" }} />
         </div>
       ) : (
         <div className="space-y-2">
-          {dishes.map(dish => (
-            <button key={dish.id} onClick={() => setEditing(dish)}
-              className="w-full flex items-center gap-3 p-3 rounded-xl text-left transition-colors hover:opacity-80"
-              style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
-              {dish.verified
-                ? <CheckCircle size={18} style={{ color: "var(--verified)", flexShrink: 0 }} />
-                : <div className="w-[18px] h-[18px] rounded-full flex-shrink-0" style={{ border: "1.5px solid var(--border)" }} />
-              }
-              <span className="flex-1 text-sm font-medium truncate" style={{ color: "var(--foreground)" }}>
-                {dish.name}
-              </span>
-              <span className="text-xs px-2 py-0.5 rounded-full flex-shrink-0"
-                style={{ background: "var(--secondary)", color: "var(--muted-foreground)" }}>
-                {DISH_CATEGORIES.find(c => c.value === dish.category)?.label ?? dish.category}
-              </span>
-            </button>
-          ))}
+          {DISH_CATEGORIES.map(cat => {
+            const group = dishes.filter(d => d.category === cat.value)
+            if (group.length === 0) return null
+            const expanded = expandedCategories.has(cat.value)
+            return (
+              <div key={cat.value} className="rounded-xl overflow-hidden"
+                style={{ border: "1px solid var(--border)", background: "var(--card)" }}>
+                {/* Cabecera de categoría */}
+                <button
+                  onClick={() => toggleCategory(cat.value)}
+                  className="w-full flex items-center gap-3 px-3 py-3 text-left"
+                  style={{ background: "var(--card)" }}>
+                  {expanded
+                    ? <ChevronDown size={16} style={{ color: "var(--muted-foreground)", flexShrink: 0 }} />
+                    : <ChevronRight size={16} style={{ color: "var(--muted-foreground)", flexShrink: 0 }} />
+                  }
+                  <span className="flex-1 text-sm font-semibold" style={{ color: "var(--foreground)" }}>
+                    {cat.label}
+                  </span>
+                  <span className="text-xs font-medium px-2 py-0.5 rounded-full"
+                    style={{ background: "var(--secondary)", color: "var(--muted-foreground)" }}>
+                    {group.length}
+                  </span>
+                </button>
+
+                {/* Lista de platos expandida */}
+                {expanded && (
+                  <div style={{ borderTop: "1px solid var(--border)" }}>
+                    {group.map((dish, idx) => (
+                      <button
+                        key={dish.id}
+                        onClick={() => setEditing(dish)}
+                        className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors hover:opacity-80"
+                        style={{
+                          background: "var(--card)",
+                          borderTop: idx > 0 ? "1px solid var(--border)" : undefined,
+                        }}>
+                        {dish.verified
+                          ? <CheckCircle size={15} style={{ color: "var(--verified)", flexShrink: 0 }} />
+                          : <div className="w-[15px] h-[15px] rounded-full flex-shrink-0" style={{ border: "1.5px solid var(--border)" }} />
+                        }
+                        <span className="flex-1 text-sm font-medium truncate" style={{ color: "var(--foreground)" }}>
+                          {dish.name}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })}
 
           {!pending && dishes.length === 0 && (
             <p className="text-center text-sm py-10" style={{ color: "var(--muted-foreground)" }}>
@@ -143,16 +185,25 @@ export function DishesPage() {
 
             <div>
               <p className="text-xs font-medium mb-1.5" style={{ color: "var(--muted-foreground)" }}>Categoría</p>
-              <Select value={newCategory} onValueChange={v => setNewCategory(v as DishCategory)}>
-                <SelectTrigger className="h-9 text-sm" style={{ borderColor: "var(--border)", background: "var(--muted)" }}>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {DISH_CATEGORIES.map(c => (
-                    <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex flex-wrap gap-2">
+                {DISH_CATEGORIES.map(c => {
+                  const active = newCategory === c.value
+                  return (
+                    <button
+                      key={c.value}
+                      type="button"
+                      onClick={() => setNewCategory(c.value)}
+                      className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+                      style={{
+                        background: active ? "var(--primary)" : "var(--muted)",
+                        color: active ? "var(--primary-foreground)" : "var(--muted-foreground)",
+                        border: `1px solid ${active ? "var(--primary)" : "var(--border)"}`,
+                      }}>
+                      {c.label}
+                    </button>
+                  )
+                })}
+              </div>
             </div>
 
             <div>

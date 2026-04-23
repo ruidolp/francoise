@@ -2,9 +2,11 @@
 
 import { useState, useEffect, useTransition, useRef } from "react"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
-import { CheckCircle, X, Search, Plus, Loader2, ChevronLeft } from "lucide-react"
+import { CheckCircle, X, Search, Plus, Loader2, ChevronLeft, ChevronDown, ChevronRight } from "lucide-react"
 import { getDishes } from "@/lib/actions/dishes"
-import type { Dish } from "@/lib/db/types"
+import type { Dish, DishCategory, MealSection } from "@/lib/db/types"
+import { DISH_CATEGORIES } from "@/lib/db/types"
+import type { MealType } from "@/lib/utils/week"
 
 interface SlotDish {
   dish_id: number
@@ -16,19 +18,27 @@ interface Props {
   open: boolean
   onClose: () => void
   title: string
+  meal: MealType | null
   selectedDishes: SlotDish[]
   onAdd: (dish: Dish) => void
   onRemove: (dishId: number) => void
 }
 
-export function DishPickerSheet({ open, onClose, title, selectedDishes, onAdd, onRemove }: Props) {
+const MEAL_SECTION_MAP: Record<MealType, MealSection> = {
+  desayuno: "DESAYUNO",
+  almuerzo: "ALMUERZO",
+  cena:     "CENA",
+}
+
+export function DishPickerSheet({ open, onClose, title, meal, selectedDishes, onAdd, onRemove }: Props) {
   const [search, setSearch] = useState("")
   const [dishes, setDishes] = useState<Dish[]>([])
   const [pending, startTransition] = useTransition()
+  const [expandedCategories, setExpandedCategories] = useState<Set<DishCategory>>(new Set())
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    if (!open) { setSearch(""); return }
+    if (!open) { setSearch(""); setExpandedCategories(new Set()); return }
     setTimeout(() => inputRef.current?.focus(), 100)
     startTransition(async () => setDishes(await getDishes()))
   }, [open])
@@ -40,9 +50,27 @@ export function DishPickerSheet({ open, onClose, title, selectedDishes, onAdd, o
     return () => clearTimeout(timer)
   }, [search])
 
+  function toggleCategory(cat: DishCategory) {
+    setExpandedCategories(prev => {
+      const next = new Set(prev)
+      next.has(cat) ? next.delete(cat) : next.add(cat)
+      return next
+    })
+  }
+
   const selectedIds = new Set(selectedDishes.map(d => d.dish_id))
-  const filteredDishes = dishes.filter(d => !selectedIds.has(d.id))
+  const mealSection = meal ? MEAL_SECTION_MAP[meal] : null
+
+  // Filtrar: excluir ya seleccionados, luego filtrar por sección de comida
+  const filteredDishes = dishes.filter(d => {
+    if (selectedIds.has(d.id)) return false
+    if (!mealSection) return true
+    const sections: MealSection[] = Array.isArray(d.meal_sections) ? d.meal_sections : []
+    return sections.length === 0 || sections.includes(mealSection)
+  })
+
   const exactMatch = dishes.some(d => d.name.toLowerCase() === search.trim().toLowerCase())
+  const isSearching = search.trim().length > 0
 
   return (
     <Sheet open={open} onOpenChange={v => !v && onClose()}>
@@ -122,11 +150,11 @@ export function DishPickerSheet({ open, onClose, title, selectedDishes, onAdd, o
           )}
 
           {!pending && (
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               {/* Opción crear si no hay match exacto */}
-              {search.trim() && !exactMatch && (
+              {isSearching && !exactMatch && (
                 <button
-                  onClick={() => {/* crear plato desde aquí requeriría más lógica, dejamos esto por ahora */}}
+                  onClick={() => {}}
                   className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors"
                   style={{ background: "var(--muted)", border: "1px dashed var(--primary)", color: "var(--primary)" }}>
                   <Plus size={16} />
@@ -134,9 +162,10 @@ export function DishPickerSheet({ open, onClose, title, selectedDishes, onAdd, o
                 </button>
               )}
 
-              {filteredDishes.map(dish => (
+              {/* Búsqueda activa: lista plana */}
+              {isSearching && filteredDishes.map(dish => (
                 <button key={dish.id}
-                  onClick={() => { onAdd(dish) }}
+                  onClick={() => onAdd(dish)}
                   className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-colors active:scale-[0.98]"
                   style={{ background: "var(--card)", border: "1px solid var(--border)" }}>
                   <div className="w-5 flex-shrink-0 flex justify-center">
@@ -152,19 +181,72 @@ export function DishPickerSheet({ open, onClose, title, selectedDishes, onAdd, o
                 </button>
               ))}
 
-              {filteredDishes.length === 0 && !search.trim() && selectedDishes.length > 0 && (
+              {/* Sin búsqueda: agrupado por categoría */}
+              {!isSearching && DISH_CATEGORIES.map(cat => {
+                const group = filteredDishes.filter(d => d.category === cat.value)
+                if (group.length === 0) return null
+                const expanded = expandedCategories.has(cat.value)
+                return (
+                  <div key={cat.value} className="rounded-xl overflow-hidden"
+                    style={{ border: "1px solid var(--border)", background: "var(--card)" }}>
+                    <button
+                      onClick={() => toggleCategory(cat.value)}
+                      className="w-full flex items-center gap-3 px-3 py-3 text-left"
+                      style={{ background: "var(--card)" }}>
+                      {expanded
+                        ? <ChevronDown size={16} style={{ color: "var(--muted-foreground)", flexShrink: 0 }} />
+                        : <ChevronRight size={16} style={{ color: "var(--muted-foreground)", flexShrink: 0 }} />
+                      }
+                      <span className="flex-1 text-sm font-semibold" style={{ color: "var(--foreground)" }}>
+                        {cat.label}
+                      </span>
+                      <span className="text-xs font-medium px-2 py-0.5 rounded-full"
+                        style={{ background: "var(--secondary)", color: "var(--muted-foreground)" }}>
+                        {group.length}
+                      </span>
+                    </button>
+
+                    {expanded && (
+                      <div style={{ borderTop: "1px solid var(--border)" }}>
+                        {group.map((dish, idx) => (
+                          <button
+                            key={dish.id}
+                            onClick={() => onAdd(dish)}
+                            className="w-full flex items-center gap-3 px-3 py-2.5 text-left transition-colors active:scale-[0.98]"
+                            style={{
+                              background: "var(--card)",
+                              borderTop: idx > 0 ? "1px solid var(--border)" : undefined,
+                            }}>
+                            <div className="w-5 flex-shrink-0 flex justify-center">
+                              {dish.verified
+                                ? <CheckCircle size={15} style={{ color: "var(--verified)" }} />
+                                : <div className="w-[15px] h-[15px] rounded-full" style={{ border: "1.5px solid var(--border)" }} />
+                              }
+                            </div>
+                            <span className="flex-1 text-sm font-medium truncate" style={{ color: "var(--foreground)" }}>
+                              {dish.name}
+                            </span>
+                            <Plus size={15} style={{ color: "var(--muted-foreground)", flexShrink: 0 }} />
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+
+              {/* Mensajes de vacío */}
+              {filteredDishes.length === 0 && !isSearching && selectedDishes.length > 0 && (
                 <p className="text-center text-sm py-6" style={{ color: "var(--muted-foreground)" }}>
                   Todos los platos ya están añadidos
                 </p>
               )}
-
-              {filteredDishes.length === 0 && !search.trim() && selectedDishes.length === 0 && (
+              {filteredDishes.length === 0 && !isSearching && selectedDishes.length === 0 && (
                 <p className="text-center text-sm py-6" style={{ color: "var(--muted-foreground)" }}>
                   No hay platos. Ve a «Mis Platos» para crear uno.
                 </p>
               )}
-
-              {filteredDishes.length === 0 && search.trim() && exactMatch && (
+              {filteredDishes.length === 0 && isSearching && exactMatch && (
                 <p className="text-center text-sm py-6" style={{ color: "var(--muted-foreground)" }}>
                   {`«${search}» ya está en la lista`}
                 </p>

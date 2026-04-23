@@ -5,7 +5,7 @@ import { Sheet, SheetContent } from "@/components/ui/sheet"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { X, CheckCircle, Loader2, Trash2, ChevronLeft, UtensilsCrossed } from "lucide-react"
+import { X, CheckCircle, Loader2, Trash2, ChevronLeft, UtensilsCrossed } from "lucide-react" from "lucide-react"
 import { ProductAutocomplete } from "@/components/product-autocomplete"
 import { getDishWithIngredients, saveDishIngredients, updateDish, deleteDish } from "@/lib/actions/dishes"
 import { getUnits } from "@/lib/actions/units"
@@ -177,16 +177,25 @@ export function DishEditorSheet({ dish, open, onClose, onSaved, onDeleted, showQ
             <p className="text-xs font-medium mb-1.5" style={{ color: "var(--muted-foreground)" }}>
               Categoría
             </p>
-            <Select value={category} onValueChange={v => setCategory(v as DishCategory)}>
-              <SelectTrigger className="h-9 text-sm" style={{ borderColor: "var(--border)", background: "var(--muted)" }}>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {DISH_CATEGORIES.map(c => (
-                  <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="flex flex-wrap gap-2">
+              {DISH_CATEGORIES.map(c => {
+                const active = category === c.value
+                return (
+                  <button
+                    key={c.value}
+                    type="button"
+                    onClick={() => setCategory(c.value)}
+                    className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors"
+                    style={{
+                      background: active ? "var(--primary)" : "var(--muted)",
+                      color: active ? "var(--primary-foreground)" : "var(--muted-foreground)",
+                      border: `1px solid ${active ? "var(--primary)" : "var(--border)"}`,
+                    }}>
+                    {c.label}
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
           <div>
