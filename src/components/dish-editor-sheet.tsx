@@ -9,7 +9,8 @@ import { X, CheckCircle, Loader2, Trash2, ChevronLeft, UtensilsCrossed } from "l
 import { ProductAutocomplete } from "@/components/product-autocomplete"
 import { getDishWithIngredients, saveDishIngredients, updateDish, deleteDish } from "@/lib/actions/dishes"
 import { getUnits } from "@/lib/actions/units"
-import type { Dish, Unit, Product } from "@/lib/db/types"
+import type { Dish, Unit, Product, DishCategory, MealSection } from "@/lib/db/types"
+import { DISH_CATEGORIES, MEAL_SECTIONS } from "@/lib/db/types"
 
 interface Ingredient {
   product_id: number
@@ -29,6 +30,8 @@ interface Props {
 
 export function DishEditorSheet({ dish, open, onClose, onSaved, onDeleted, showQuantities }: Props) {
   const [name, setName] = useState("")
+  const [category, setCategory] = useState<DishCategory>("PLATO_PREPARADO")
+  const [mealSections, setMealSections] = useState<MealSection[]>([])
   const [ingredients, setIngredients] = useState<Ingredient[]>([])
   const [units, setUnits] = useState<Unit[]>([])
   const [loading, setLoading] = useState(false)
@@ -47,6 +50,8 @@ export function DishEditorSheet({ dish, open, onClose, onSaved, onDeleted, showQ
       return
     }
     setName(dish.name)
+    setCategory(dish.category)
+    setMealSections(dish.meal_sections ?? [])
     dishIdRef.current = dish.id
     setLoading(true)
 
@@ -92,13 +97,19 @@ export function DishEditorSheet({ dish, open, onClose, onSaved, onDeleted, showQ
     ))
   }
 
+  function toggleMealSection(section: MealSection) {
+    setMealSections(prev =>
+      prev.includes(section) ? prev.filter(s => s !== section) : [...prev, section]
+    )
+  }
+
   async function handleSave() {
     if (!dish || saving) return
     setSaving(true)
     try {
-      if (name.trim() !== dish.name) await updateDish(dish.id, { name: name.trim() })
+      await updateDish(dish.id, { name: name.trim(), category, meal_sections: mealSections })
       await saveDishIngredients(dish.id, ingredients)
-      onSaved({ ...dish, name: name.trim(), verified: true, updated_at: new Date() })
+      onSaved({ ...dish, name: name.trim(), verified: true, category, meal_sections: mealSections, updated_at: new Date() })
       onClose()
     } finally {
       setSaving(false)
@@ -156,11 +167,55 @@ export function DishEditorSheet({ dish, open, onClose, onSaved, onDeleted, showQ
             value={name}
             onChange={e => setName(e.target.value)}
             className="w-full text-xl font-bold bg-transparent outline-none border-b-2 pb-1 transition-colors"
-            style={{
-              color: "var(--foreground)",
-              borderColor: "var(--primary)",
-            }}
+            style={{ color: "var(--foreground)", borderColor: "var(--primary)" }}
           />
+        </div>
+
+        {/* Categoría y secciones */}
+        <div className="px-4 pb-3 flex-shrink-0 space-y-3">
+          <div>
+            <p className="text-xs font-medium mb-1.5" style={{ color: "var(--muted-foreground)" }}>
+              Categoría
+            </p>
+            <Select value={category} onValueChange={v => setCategory(v as DishCategory)}>
+              <SelectTrigger className="h-9 text-sm" style={{ borderColor: "var(--border)", background: "var(--muted)" }}>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {DISH_CATEGORIES.map(c => (
+                  <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <p className="text-xs font-medium mb-1.5" style={{ color: "var(--muted-foreground)" }}>
+              Disponible en
+              <span className="ml-1 font-normal" style={{ color: "var(--muted-foreground)", opacity: 0.7 }}>
+                (vacío = todas)
+              </span>
+            </p>
+            <div className="flex gap-2">
+              {MEAL_SECTIONS.map(s => {
+                const active = mealSections.includes(s.value)
+                return (
+                  <button
+                    key={s.value}
+                    type="button"
+                    onClick={() => toggleMealSection(s.value)}
+                    className="flex-1 text-xs font-semibold py-1.5 rounded-lg transition-colors"
+                    style={{
+                      background: active ? "var(--primary)" : "var(--muted)",
+                      color: active ? "var(--primary-foreground)" : "var(--muted-foreground)",
+                      border: `1px solid ${active ? "var(--primary)" : "var(--border)"}`,
+                    }}>
+                    {s.label}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
         </div>
 
         {/* Sección ingredientes */}
@@ -215,10 +270,14 @@ export function DishEditorSheet({ dish, open, onClose, onSaved, onDeleted, showQ
                       style={{ background: "var(--muted)", border: "1px solid var(--border)", color: "var(--foreground)" }}
                     />
                     <Select
-                      value={ing.unit_id != null ? ing.unit_id.toString() : undefined}
-                      onValueChange={v => setUnit(ing.product_id, v ?? "")}>
+                      value={ing.unit_id != null ? ing.unit_id.toString() : ""}
+                      onValueChange={v => setUnit(ing.product_id, v)}>
                       <SelectTrigger className="w-20 h-8 text-xs" style={{ borderColor: "var(--border)" }}>
-                        <SelectValue placeholder="Ud." />
+                        <SelectValue>
+                          {(v: string | null) => v
+                            ? (units.find(u => u.id === Number(v))?.name ?? v)
+                            : <span style={{ opacity: 0.45 }}>Ud.</span>}
+                        </SelectValue>
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="">—</SelectItem>

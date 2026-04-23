@@ -1,5 +1,22 @@
 import { Generated, Insertable, Selectable, Updateable } from "kysely"
 
+export type DishCategory = "ENSALADA" | "ACOMPAÑAMIENTO" | "FUERTE" | "PLATO_PREPARADO" | "POSTRE"
+export type MealSection  = "DESAYUNO" | "ALMUERZO" | "CENA"
+
+export const DISH_CATEGORIES: { value: DishCategory; label: string }[] = [
+  { value: "ENSALADA",       label: "Ensalada" },
+  { value: "ACOMPAÑAMIENTO", label: "Acompañamiento" },
+  { value: "FUERTE",         label: "Plato Fuerte" },
+  { value: "PLATO_PREPARADO",label: "Plato Preparado" },
+  { value: "POSTRE",         label: "Postre" },
+]
+
+export const MEAL_SECTIONS: { value: MealSection; label: string }[] = [
+  { value: "DESAYUNO", label: "Desayuno" },
+  { value: "ALMUERZO", label: "Almuerzo" },
+  { value: "CENA",     label: "Cena" },
+]
+
 export interface UnitsTable {
   id:         Generated<number>
   name:       string
@@ -13,12 +30,14 @@ export interface ProductsTable {
 }
 
 export interface DishesTable {
-  id:         Generated<number>
-  name:       string
-  verified:   Generated<boolean>
-  source_url: string | null
-  created_at: Generated<Date>
-  updated_at: Generated<Date>
+  id:            Generated<number>
+  name:          string
+  verified:      Generated<boolean>
+  source_url:    string | null
+  category:      Generated<DishCategory>
+  meal_sections: Generated<MealSection[]>
+  created_at:    Generated<Date>
+  updated_at:    Generated<Date>
 }
 
 export interface DishIngredientsTable {

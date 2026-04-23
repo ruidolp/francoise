@@ -2,6 +2,7 @@
 
 import { db } from "@/lib/db/client"
 import { revalidatePath } from "next/cache"
+import type { DishCategory, MealSection } from "@/lib/db/types"
 
 export async function getDishes(search?: string) {
   let query = db
@@ -36,17 +37,27 @@ export async function getDishWithIngredients(dishId: number) {
   return { ...dish, ingredients }
 }
 
-export async function createDish(name: string) {
+export async function createDish(
+  name: string,
+  category: DishCategory = "PLATO_PREPARADO",
+  meal_sections: MealSection[] = []
+) {
   const dish = await db
     .insertInto("dishes")
-    .values({ name: name.trim() })
+    .values({ name: name.trim(), category, meal_sections })
     .returningAll()
     .executeTakeFirstOrThrow()
   revalidatePath("/platos")
   return dish
 }
 
-export async function updateDish(id: number, data: { name?: string; verified?: boolean; source_url?: string }) {
+export async function updateDish(id: number, data: {
+  name?: string
+  verified?: boolean
+  source_url?: string
+  category?: DishCategory
+  meal_sections?: MealSection[]
+}) {
   const dish = await db
     .updateTable("dishes")
     .set({ ...data, updated_at: new Date() })

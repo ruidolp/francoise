@@ -9,7 +9,9 @@ import {
 } from "@/components/ui/dialog"
 import { DishEditorSheet } from "@/components/dish-editor-sheet"
 import { getDishes, createDish } from "@/lib/actions/dishes"
-import type { Dish } from "@/lib/db/types"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import type { Dish, DishCategory, MealSection } from "@/lib/db/types"
+import { DISH_CATEGORIES, MEAL_SECTIONS } from "@/lib/db/types"
 
 export function DishesPage() {
   const [dishes, setDishes] = useState<Dish[]>([])
@@ -17,6 +19,8 @@ export function DishesPage() {
   const [editing, setEditing] = useState<Dish | null>(null)
   const [createOpen, setCreateOpen] = useState(false)
   const [newName, setNewName] = useState("")
+  const [newCategory, setNewCategory] = useState<DishCategory>("PLATO_PREPARADO")
+  const [newMealSections, setNewMealSections] = useState<MealSection[]>([])
   const [creating, setCreating] = useState(false)
   const [pending, startTransition] = useTransition()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -31,12 +35,24 @@ export function DishesPage() {
     if (createOpen) setTimeout(() => inputRef.current?.focus(), 50)
   }, [createOpen])
 
+  function toggleNewMealSection(section: MealSection) {
+    setNewMealSections(prev =>
+      prev.includes(section) ? prev.filter(s => s !== section) : [...prev, section]
+    )
+  }
+
+  function resetCreateForm() {
+    setNewName("")
+    setNewCategory("PLATO_PREPARADO")
+    setNewMealSections([])
+  }
+
   async function handleCreate() {
     if (!newName.trim()) return
     setCreating(true)
-    const dish = await createDish(newName.trim())
+    const dish = await createDish(newName.trim(), newCategory, newMealSections)
     setDishes(prev => [dish, ...prev])
-    setNewName("")
+    resetCreateForm()
     setCreateOpen(false)
     setEditing(dish)
     setCreating(false)
@@ -79,6 +95,10 @@ export function DishesPage() {
               <span className="flex-1 text-sm font-medium truncate" style={{ color: "var(--foreground)" }}>
                 {dish.name}
               </span>
+              <span className="text-xs px-2 py-0.5 rounded-full flex-shrink-0"
+                style={{ background: "var(--secondary)", color: "var(--muted-foreground)" }}>
+                {DISH_CATEGORIES.find(c => c.value === dish.category)?.label ?? dish.category}
+              </span>
             </button>
           ))}
 
@@ -101,22 +121,69 @@ export function DishesPage() {
       </div>
 
       {/* Dialog crear plato */}
-      <Dialog open={createOpen} onOpenChange={v => { if (!v) { setCreateOpen(false); setNewName("") } }}>
+      <Dialog open={createOpen} onOpenChange={v => { if (!v) { setCreateOpen(false); resetCreateForm() } }}>
         <DialogContent showCloseButton={false}
           style={{ background: "var(--card)", color: "var(--card-foreground)" }}>
           <DialogHeader>
             <DialogTitle style={{ color: "var(--foreground)" }}>Nuevo plato</DialogTitle>
           </DialogHeader>
-          <Input
-            ref={inputRef}
-            placeholder="Ej: Pasta a la boloñesa"
-            value={newName}
-            onChange={e => setNewName(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && handleCreate()}
-            style={{ borderColor: "var(--border)", background: "var(--muted)" }}
-          />
+
+          <div className="space-y-4">
+            <div>
+              <p className="text-xs font-medium mb-1.5" style={{ color: "var(--muted-foreground)" }}>Nombre</p>
+              <Input
+                ref={inputRef}
+                placeholder="Ej: Pasta a la boloñesa"
+                value={newName}
+                onChange={e => setNewName(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && handleCreate()}
+                style={{ borderColor: "var(--border)", background: "var(--muted)" }}
+              />
+            </div>
+
+            <div>
+              <p className="text-xs font-medium mb-1.5" style={{ color: "var(--muted-foreground)" }}>Categoría</p>
+              <Select value={newCategory} onValueChange={v => setNewCategory(v as DishCategory)}>
+                <SelectTrigger className="h-9 text-sm" style={{ borderColor: "var(--border)", background: "var(--muted)" }}>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {DISH_CATEGORIES.map(c => (
+                    <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <p className="text-xs font-medium mb-1.5" style={{ color: "var(--muted-foreground)" }}>
+                Disponible en
+                <span className="ml-1 font-normal" style={{ opacity: 0.7 }}>(vacío = todas)</span>
+              </p>
+              <div className="flex gap-2">
+                {MEAL_SECTIONS.map(s => {
+                  const active = newMealSections.includes(s.value)
+                  return (
+                    <button
+                      key={s.value}
+                      type="button"
+                      onClick={() => toggleNewMealSection(s.value)}
+                      className="flex-1 text-xs font-semibold py-1.5 rounded-lg transition-colors"
+                      style={{
+                        background: active ? "var(--primary)" : "var(--muted)",
+                        color: active ? "var(--primary-foreground)" : "var(--muted-foreground)",
+                        border: `1px solid ${active ? "var(--primary)" : "var(--border)"}`,
+                      }}>
+                      {s.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
+
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setCreateOpen(false); setNewName("") }}
+            <Button variant="outline" onClick={() => { setCreateOpen(false); resetCreateForm() }}
               style={{ borderColor: "var(--border)", color: "var(--foreground)" }}>
               Cancelar
             </Button>
