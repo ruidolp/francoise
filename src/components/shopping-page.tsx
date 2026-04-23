@@ -140,24 +140,25 @@ export function ShoppingPage() {
             <div className="w-5 h-5 rounded-md flex-shrink-0" style={{ border: "2px solid var(--primary)" }} />
             {(() => {
               const qtyStr = item.quantities
-                .map(q =>
-                  q.qty != null && q.unit ? `${q.qty} ${q.unit}` :
-                  q.qty != null ? `${q.qty}` :
-                  q.unit ? q.unit : null
-                )
+                .map(q => q.qty != null && q.unit ? `${q.qty} ${q.unit}` : null)
                 .filter(Boolean)
                 .join(" · ")
-              const parts = [qtyStr, item.count > 0 ? `(${item.count})` : null].filter(Boolean)
-              return parts.length > 0 ? (
+              return qtyStr ? (
                 <span className="text-xs px-1.5 py-0.5 rounded-full flex-shrink-0"
                   style={{ background: "var(--secondary)", color: "var(--secondary-foreground)" }}>
-                  {parts.join(" ")}
+                  {qtyStr}
                 </span>
               ) : null
             })()}
             <span className="flex-1 text-sm font-medium capitalize" style={{ color: "var(--foreground)" }}>
               {item.product_name}
             </span>
+            {item.count > 0 && (
+              <span className="text-xs px-1.5 py-0.5 rounded-full flex-shrink-0"
+                style={{ background: "var(--secondary)", color: "var(--secondary-foreground)" }}>
+                ({item.count})
+              </span>
+            )}
             {item.manual && (
               <button onClick={e => { e.stopPropagation(); removeManual(item.product_id) }}
                 className="p-0.5" style={{ color: "var(--muted-foreground)" }}>
